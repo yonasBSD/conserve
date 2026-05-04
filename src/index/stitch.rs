@@ -211,13 +211,10 @@ async fn previous_existing_band(archive: &Archive, mut band_id: BandId) -> Optio
         // TODO: It might be faster to list the present bands, maybe when
         // constructing Stitch, and calculate from that, rather than walking
         // backwards one at a time...
-        if let Some(prev_band_id) = band_id.previous() {
-            band_id = prev_band_id;
-            if archive.band_exists(band_id).await.unwrap_or(false) {
-                return Some(band_id);
-            }
-        } else {
-            return None;
+        band_id = band_id.previous()?;
+        // TODO: Preferably don't swallow the error here?
+        if archive.band_exists(band_id).await.unwrap_or(false) {
+            return Some(band_id);
         }
     }
 }

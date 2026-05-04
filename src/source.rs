@@ -322,12 +322,10 @@ impl Iterator for Iter {
                 // Sanity check that all the returned paths are in correct order.
                 self.check_order.check(&entry.apath);
                 return Some(entry);
-            } else if let Some(entry) = self.dir_deque.pop_front() {
+            } else {
+                let entry = self.dir_deque.pop_front()?;
                 // No entries already queued, visit a new directory to try to refill the queue.
                 self.visit_next_directory(&entry)
-            } else {
-                // No entries queued and no more directories to visit.
-                return None;
             }
         }
     }
