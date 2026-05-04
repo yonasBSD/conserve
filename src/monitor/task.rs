@@ -90,11 +90,8 @@ impl TaskState {
 
     pub fn percent(&self) -> usize {
         let total = self.total.load(Relaxed);
-        if total == 0 {
-            0
-        } else {
-            self.done.load(Relaxed) * 100 / total
-        }
+        let done = self.done.load(Relaxed);
+        100 * done.checked_div(total).unwrap_or(0)
     }
 }
 
