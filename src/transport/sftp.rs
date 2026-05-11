@@ -74,7 +74,14 @@ impl Protocol {
         let username = match url.username() {
             "" => {
                 trace!("Take default SSH username from environment");
-                whoami::username()
+                whoami::username().map_err(|err| {
+                    error!(?err, "Error getting username from environment");
+                    super::Error {
+                        kind: ErrorKind::Other,
+                        source: Some(Box::new(err)),
+                        url: Some(url.clone()),
+                    }
+                })?
             }
             u => u.to_owned(),
         };
