@@ -118,7 +118,7 @@ impl IndexWriter {
         }
         let relpath = hunk_relpath(self.sequence);
         let json = serde_json::to_vec(&self.entries)?;
-        if (self.sequence % HUNKS_PER_SUBDIR) == 0 {
+        if self.sequence.is_multiple_of(HUNKS_PER_SUBDIR) {
             self.transport
                 .create_dir(&subdir_relpath(self.sequence))
                 .await?;

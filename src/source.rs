@@ -376,7 +376,7 @@ mod test {
             ]
         );
 
-        let repr = format!("{:?}", &result[6]);
+        let repr = format!("{:?}", result[6]);
         println!("{repr}");
         assert!(repr.starts_with("Entry {"));
         assert!(repr.contains("Apath(\"/jam/apricot\")"));

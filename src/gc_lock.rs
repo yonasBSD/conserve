@@ -63,10 +63,10 @@ impl GarbageCollectionLock {
     pub async fn new(archive: &Archive) -> Result<GarbageCollectionLock> {
         let archive = archive.clone();
         let band_id = archive.last_band_id().await?;
-        if let Some(band_id) = band_id {
-            if !archive.band_is_closed(band_id).await? {
-                return Err(Error::DeleteWithIncompleteBackup { band_id });
-            }
+        if let Some(band_id) = band_id
+            && !archive.band_is_closed(band_id).await?
+        {
+            return Err(Error::DeleteWithIncompleteBackup { band_id });
         }
         if archive.transport().is_file(GC_LOCK).await.unwrap_or(true) {
             return Err(Error::GarbageCollectionLockHeld);

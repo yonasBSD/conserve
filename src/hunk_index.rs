@@ -37,14 +37,14 @@ impl IndexHunkIndex {
         for hunk_index in index.hunks_available().await? {
             let mut index = index.duplicate();
             let entries = index.read_hunk(hunk_index).await?;
-            if let Some(entries) = entries {
-                if let (Some(first), Some(last)) = (entries.first(), entries.last()) {
-                    hunk_info.push(HunkIndexMeta {
-                        index: hunk_index,
-                        start_path: first.apath.clone(),
-                        end_path: last.apath.clone(),
-                    });
-                }
+            if let Some(entries) = entries
+                && let (Some(first), Some(last)) = (entries.first(), entries.last())
+            {
+                hunk_info.push(HunkIndexMeta {
+                    index: hunk_index,
+                    start_path: first.apath.clone(),
+                    end_path: last.apath.clone(),
+                });
             }
         }
         #[cfg(debug_assertions)]

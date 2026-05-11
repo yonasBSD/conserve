@@ -173,16 +173,16 @@ impl IndexHunkIter {
                 }
             };
             if let Some(ref after) = self.after {
-                if let Some(last) = entries.last() {
-                    if last.apath <= *after {
-                        continue;
-                    }
+                if let Some(last) = entries.last()
+                    && last.apath <= *after
+                {
+                    continue;
                 }
-                if let Some(first) = entries.first() {
-                    if first.apath > *after {
-                        self.after = None; // don't need to look again
-                        return Some(entries);
-                    }
+                if let Some(first) = entries.first()
+                    && first.apath > *after
+                {
+                    self.after = None; // don't need to look again
+                    return Some(entries);
                 }
                 let idx = match entries.binary_search_by_key(&after, |entry| &entry.apath) {
                     Ok(idx) => idx + 1, // after the point it was found

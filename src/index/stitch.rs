@@ -250,7 +250,7 @@ mod test {
             TestMonitor::arc(),
         );
         while let Some(entry) = stitch.next().await {
-            strs.push(format!("{}:{}", &entry.apath, entry.target.unwrap()));
+            strs.push(format!("{}:{}", entry.apath, entry.target.unwrap()));
         }
         strs.join(" ")
     }

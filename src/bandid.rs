@@ -66,10 +66,10 @@ impl FromStr for BandId {
 
     /// Make a new BandId from a string form.
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        if let Some(num) = s.strip_prefix('b') {
-            if let Ok(num) = num.parse::<u32>() {
-                return Ok(BandId(num));
-            }
+        if let Some(num) = s.strip_prefix('b')
+            && let Ok(num) = num.parse::<u32>()
+        {
+            return Ok(BandId(num));
         }
         Err(Error::InvalidVersion { version: s.into() })
     }
