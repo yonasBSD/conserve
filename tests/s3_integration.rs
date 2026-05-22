@@ -157,7 +157,7 @@ impl Drop for TempBucket {
 }
 
 fn conserve() -> Command {
-    Command::new(&cargo_bin!("conserve"))
+    Command::new(cargo_bin!("conserve"))
 }
 
 #[test]
