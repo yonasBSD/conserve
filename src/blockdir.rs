@@ -292,8 +292,9 @@ impl BlockDir {
             let transport = self.transport.clone();
             taskset.spawn(async move {
                 // get_async_uncached checks that the hash is correct
+                let result = get_async_uncached(&transport, hash.clone(), monitor.clone()).await;
                 task.increment(1);
-                match get_async_uncached(&transport, hash.clone(), monitor.clone()).await {
+                match result {
                     Ok(bytes) => Some((hash, bytes.len())),
                     Err(err) => {
                         monitor.error(err);
