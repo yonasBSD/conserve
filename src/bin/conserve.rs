@@ -53,6 +53,10 @@ struct Args {
     #[arg(long, short = 'D', global = true)]
     debug: bool,
 
+    /// Write a detailed trace to a temporary file.
+    #[arg(long, global = true)]
+    trace_tmp: bool,
+
     /// Control timestamps prefixes on stderr.
     #[arg(long, value_enum, global = true, default_value_t = TraceTimeStyle::None)]
     trace_time: TraceTimeStyle,
@@ -714,7 +718,13 @@ fn main() -> Result<ExitCode> {
         Level::INFO
     };
     let monitor = Arc::new(TermUiMonitor::new(!args.no_progress));
-    let _flush_tracing = enable_tracing(&monitor, &args.trace_time, console_level, &args.log_json);
+    let _flush_tracing = enable_tracing(
+        &monitor,
+        &args.trace_time,
+        console_level,
+        &args.log_json,
+        args.trace_tmp,
+    );
     let result = args.command.run(monitor.clone());
     debug!(elapsed = ?start_time.elapsed());
     if let Some(metrics_path) = args.metrics_json {

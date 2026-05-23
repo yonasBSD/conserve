@@ -8,6 +8,8 @@
 
 - New: Support for reading and writing archives over SFTP. Credentials currently must come from an sftp-agent.
 
+- New: Added `--trace-tmp`, which writes a detailed trace to a temporary file, whose name is printed to stderr.
+
 ## 24.8.0
 
 - Fixed: `restore --only` specifying a subdirectory no longer fails due to parent directories missing from the destination.

@@ -7,7 +7,7 @@ use std::fmt::Debug;
 use std::fs::OpenOptions;
 use std::path::PathBuf;
 
-use tracing::{Level, trace};
+use tracing::{Level, info, trace};
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::{
     Registry, filter,
@@ -35,6 +35,7 @@ pub fn enable_tracing(
     time_style: &TraceTimeStyle,
     console_level: Level,
     json_path: &Option<PathBuf>,
+    trace_tmp: bool,
 ) -> Option<WorkerGuard> {
     let time_style = time_style.clone();
     let console_layer = tracing_subscriber::fmt::Layer::default()
@@ -43,6 +44,23 @@ pub fn enable_tracing(
         .with_timer(time_style)
         .with_filter(filter::Targets::new().with_target("conserve", console_level));
     let json_layer;
+    let (trace_tmp_layer, tmp_path) = if trace_tmp {
+        let (tmp_file, tmp_path) = tempfile::Builder::new()
+            .prefix(&format!("conserve-trace-{}-", std::process::id()))
+            .suffix(".log")
+            .tempfile()
+            .expect("create trace temp file")
+            .keep()
+            .expect("keep trace temp file");
+        let layer = tracing_subscriber::fmt::Layer::default()
+            .with_writer(tmp_file)
+            .with_ansi(false)
+            .with_timer(time::uptime())
+            .with_filter(filter::Targets::new().with_target("conserve", Level::TRACE));
+        (Some(layer), Some(tmp_path))
+    } else {
+        (None, None)
+    };
     let flush_guard;
     if let Some(json_path) = json_path {
         let file_writer = OpenOptions::new()
@@ -65,9 +83,13 @@ pub fn enable_tracing(
     Registry::default()
         .with(console_layer)
         .with(json_layer)
+        .with(trace_tmp_layer)
         .init();
 
     trace!("Tracing enabled");
+    if let Some(tmp_path) = tmp_path {
+        info!("Trace temp file: {}", tmp_path.display());
+    }
     flush_guard
 }
 
