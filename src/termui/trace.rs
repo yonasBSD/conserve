@@ -1,5 +1,5 @@
 // Conserve backup system.
-// Copyright 2015-2023 Martin Pool.
+// Copyright 2015-2026 Martin Pool.
 
 //! Terminal/text UI.
 
@@ -7,14 +7,14 @@ use std::fmt::Debug;
 use std::fs::OpenOptions;
 use std::path::PathBuf;
 
-#[allow(unused_imports)]
-use tracing::{Level, debug, error, info, trace, warn};
+use tracing::{Level, trace};
 use tracing_appender::non_blocking::WorkerGuard;
-use tracing_subscriber::Registry;
-use tracing_subscriber::filter;
-use tracing_subscriber::fmt::time::FormatTime;
-use tracing_subscriber::layer::Layer;
-use tracing_subscriber::prelude::*;
+use tracing_subscriber::{
+    Registry, filter,
+    fmt::{format::Writer, time},
+    layer::Layer,
+    prelude::*,
+};
 
 /// Chosen style of timestamp prefix on trace lines.
 #[derive(clap::ValueEnum, Clone, Debug)]
@@ -36,59 +36,48 @@ pub fn enable_tracing(
     console_level: Level,
     json_path: &Option<PathBuf>,
 ) -> Option<WorkerGuard> {
-    use tracing_subscriber::fmt::time;
-    fn hookup<FT>(
-        monitor: &super::TermUiMonitor,
-        timer: FT,
-        console_level: Level,
-        json_path: &Option<PathBuf>,
-    ) -> Option<WorkerGuard>
-    where
-        FT: FormatTime + Send + Sync + 'static,
-    {
-        let console_layer = tracing_subscriber::fmt::Layer::default()
-            .with_ansi(clicolors_control::colors_enabled())
-            .with_writer(monitor.view())
-            .with_timer(timer)
-            .with_filter(filter::Targets::new().with_target("conserve", console_level));
-        let json_layer;
-        let flush_guard;
-        if let Some(json_path) = json_path {
-            let file_writer = OpenOptions::new()
-                .create(true)
-                .append(true)
-                .read(false)
-                .open(json_path)
-                .expect("open json log file");
-            let (non_blocking, guard) = tracing_appender::non_blocking(file_writer);
-            flush_guard = Some(guard);
-            json_layer = Some(
-                tracing_subscriber::fmt::Layer::default()
-                    .json()
-                    .with_writer(non_blocking),
-            );
-        } else {
-            flush_guard = None;
-            json_layer = None;
-        }
-        Registry::default()
-            .with(console_layer)
-            .with(json_layer)
-            .init();
-        flush_guard
+    let time_style = time_style.clone();
+    let console_layer = tracing_subscriber::fmt::Layer::default()
+        .with_ansi(clicolors_control::colors_enabled())
+        .with_writer(monitor.view())
+        .with_timer(time_style)
+        .with_filter(filter::Targets::new().with_target("conserve", console_level));
+    let json_layer;
+    let flush_guard;
+    if let Some(json_path) = json_path {
+        let file_writer = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .read(false)
+            .open(json_path)
+            .expect("open json log file");
+        let (non_blocking, guard) = tracing_appender::non_blocking(file_writer);
+        flush_guard = Some(guard);
+        json_layer = Some(
+            tracing_subscriber::fmt::Layer::default()
+                .json()
+                .with_writer(non_blocking),
+        );
+    } else {
+        flush_guard = None;
+        json_layer = None;
     }
+    Registry::default()
+        .with(console_layer)
+        .with(json_layer)
+        .init();
 
-    let flush_guard = match time_style {
-        TraceTimeStyle::None => hookup(monitor, (), console_level, json_path),
-        TraceTimeStyle::Utc => hookup(monitor, time::UtcTime::rfc_3339(), console_level, json_path),
-        TraceTimeStyle::Relative => hookup(monitor, time::uptime(), console_level, json_path),
-        TraceTimeStyle::Local => hookup(
-            monitor,
-            time::OffsetTime::local_rfc_3339().unwrap(),
-            console_level,
-            json_path,
-        ),
-    };
     trace!("Tracing enabled");
     flush_guard
+}
+
+impl time::FormatTime for TraceTimeStyle {
+    fn format_time(&self, w: &mut Writer) -> std::fmt::Result {
+        match self {
+            TraceTimeStyle::None => Ok(()),
+            TraceTimeStyle::Utc => time::UtcTime::rfc_3339().format_time(w),
+            TraceTimeStyle::Relative => time::uptime().format_time(w),
+            TraceTimeStyle::Local => time::OffsetTime::local_rfc_3339().unwrap().format_time(w),
+        }
+    }
 }
