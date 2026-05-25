@@ -2236,11 +2236,10 @@ dependencies = [
 
 [[package]]
 name = "nutmeg"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d05a155ba67c6abedfa484b124b3b723e177f9c07360cf05ebe0130dc44585b"
+checksum = "c89f27eaed136bd11b2a9f2fa941f9721d33d714ce65c28fb3d6d20e688c8798"
 dependencies = [
- "atty",
  "terminal_size",
  "yansi 0.5.1",
 ]
