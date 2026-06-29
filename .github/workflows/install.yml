@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://www.schemastore.org/github-workflow.json
 # Check install from crates.io works, both with and without --locked.
 #
 # This is mostly to check for loose dependencies that might have broken
